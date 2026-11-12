@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WaterGuard — Smart Water Quality Monitoring System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js for High Performance Interactive IoT Graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase Realtime Database SDK (Connected to WaterGuard DB) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- MOBILE OVERLAY BACKDROP -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <!-- ==================== 1. SIDEBAR ==================== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <!-- Water drop SVG -->
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="url(#waterGrad)"></path>
+            <defs>
+              <linearGradient id="waterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#00F2FE" />
+                <stop offset="100%" stop-color="#4FACFE" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">WaterGuard</span>
+          <!-- <span class="brand-badge">IoT Core</span> -->
+        </div>
+        <button class="mobile-close-btn" id="mobileCloseBtn" aria-label="Close Sidebar">✕</button>
+      </div>
+
+      <nav class="nav-menu">
+        <div class="nav-section-label">MONITORING</div>
+        <a href="#dashboard" class="nav-item active">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="9" rx="1.5"></rect>
+            <rect x="14" y="3" width="7" height="5" rx="1.5"></rect>
+            <rect x="14" y="12" width="7" height="9" rx="1.5"></rect>
+            <rect x="3" y="16" width="7" height="5" rx="1.5"></rect>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#analytics" class="nav-item">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          <span>Analytics</span>
+        </a>
+        <a href="#monitoring" class="nav-item">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+          </svg>
+          <span>Monitoring</span>
+        </a>
+        <a href="#alerts" class="nav-item">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span>Alerts</span>
+          <span class="nav-pill" id="navAlertCount">0</span>
+        </a>
+        <a href="#settings" class="nav-item">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <!-- Hardware Node Status Footer -->
+      <div class="sidebar-footer">
+        <div class="node-status-card">
+          <div class="node-header">
+            <span class="node-title">Hardware Node</span>
+            <span class="node-signal">
+              <span class="signal-bar bar-1 active"></span>
+              <span class="signal-bar bar-2 active"></span>
+              <span class="signal-bar bar-3 active"></span>
+              <span class="signal-bar bar-4 active"></span>
+            </span>
+          </div>
+          <div class="node-body">
+            <span class="node-chip">ESP32 Core</span>
+            <span class="node-badge" id="nodeConnStatus">Wi-Fi Active</span>
+          </div>
+          <div class="node-meta">
+            <span>Ping: <strong id="nodePing">24 ms</strong></span>
+            <span>RSSI: <strong id="nodeRssi">-62 dBm</strong></span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== MAIN CONTENT WRAPPER ==================== -->
+    <div class="main-wrapper">
+      
+      <!-- ==================== 2. TOP BAR ==================== -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-toggle-btn" id="mobileToggleBtn" aria-label="Open Sidebar">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <div class="topbar-headings">
+            <h1 class="topbar-title">Water Quality Monitoring</h1>
+            <p class="topbar-subtitle">Real-time IoT Telemetry & Health Analytics</p>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Location selector pill -->
+          <div class="location-pill-wrap">
+            <label for="locationSelector" class="sr-only">Monitoring Location</label>
+            <div class="location-selector-box">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#00F2FE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <select id="locationSelector" class="location-select">
+                <option value="tank01" selected>Water Tank – Tank 01</option>
+                <option value="tank02">Water Tank – Tank 02</option>
+                <option value="river01">River Basin – Station 01 (Inflow)</option>
+                <option value="river02">River Basin – Station 02 (Delta)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Firebase Realtime Database Status Indicator -->
+          <div class="firebase-status-pill" id="firebaseStatusPill" title="Firebase Realtime Database Status">
+            <span class="fb-pulse-dot" id="fbPulseDot"></span>
+            <span class="fb-status-text" id="fbStatusText">Firebase: Connecting...</span>
+          </div>
+
+          <!-- System Online Indicator -->
+          <div class="system-status-indicator">
+            <span class="status-dot-pulse"></span>
+            <span class="status-text" id="sysStatusText">System Online</span>
+          </div>
+
+          <!-- Date & Live Clock -->
+          <div class="clock-display">
+            <div class="clock-date" id="currentDate">-- -- ----</div>
+            <div class="clock-time" id="currentTime">00:00:00 AM</div>
+          </div>
+
+          <!-- Demo Viva Simulation Controls -->
+          <div class="demo-controls" title="Quick Simulation for Viva/Presentation">
+            <button class="btn-demo" id="btnSimulate" title="Toggle Auto Telemetry Simulation">
+              <span class="sim-pulse"></span>
+              <span id="simBtnText">Live Sim: ON</span>
+            </button>
+          </div>
+
+          <!-- User / Profile Icon -->
+          <div class="user-profile">
+            <div class="avatar-circle">SK</div>
+            <div class="user-details">
+              <span class="user-name">Sumit Kumar</span>
+              <!-- <span class="user-role">IoT Station 01</span> -->
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ==================== MAIN DASHBOARD BODY ==================== -->
+      <main class="dashboard-content" id="dashboard">
+        
+        <!-- FIREBASE REALTIME SYNC BANNER -->
+        <div class="firebase-banner" id="firebaseBanner">
+          <div class="fb-banner-content">
+            <div class="fb-banner-left">
+              <div class="fb-badge-icon">🔥</div>
+              <div class="fb-banner-text">
+                <div class="fb-banner-title" id="fbBannerTitle">Firebase Realtime Database Connected</div>
+                <div class="fb-banner-sub" id="fbBannerMsg">
+                  Connected to: <code class="fb-code-endpoint">https://waterguard-67705-default-rtdb.asia-southeast1.firebasedatabase.app</code>
+                </div>
+              </div>
+            </div>
+            <div class="fb-banner-actions">
+              <button class="fb-btn-action" id="fbTestPushBtn" title="Push a sample test packet to your Firebase Database">
+                <span>🚀 Push Test Data</span>
+              </button>
+              <button class="fb-btn-help" id="fbRulesHelpBtn" title="Show instructions for database rules">
+                <span>📋 Rules Guide</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION TITLE & LAST UPDATED -->
+        <div class="overview-header">
+          <div>
+            <h2 class="section-title">Water Quality Overview</h2>
+            <p class="section-sub">Live readings from deployed submerged multisensor probes</p>
+          </div>
+          <div class="last-updated-badge">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span id="lastUpdatedText">Last Updated: 10:42:15 AM</span>
+            <span class="refresh-spinner" id="refreshSpinner"></span>
+          </div>
+        </div>
+
+        <!-- ==================== 3. SENSOR CARDS ==================== -->
+        <div class="sensor-cards-grid">
+          
+          <!-- SENSOR 1: pH -->
+          <div class="sensor-card" id="card-ph">
+            <div class="sensor-card-top">
+              <div class="sensor-icon-wrap ph-theme">
+                <!-- Beaker / pH icon -->
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10 2v7.31L4.67 19.5A2 2 0 0 0 6.42 22h11.16a2 2 0 0 0 1.75-2.5L14 9.31V2"></path>
+                  <line x1="8.5" y1="2" x2="15.5" y2="2"></line>
+                  <line x1="7" y1="16" x2="17" y2="16"></line>
+                </svg>
+              </div>
+              <div class="sensor-meta">
+                <span class="sensor-label">Acidity / Alkalinity</span>
+                <h3 class="sensor-name">pH Level</h3>
+              </div>
+              <span class="status-badge normal" id="phBadge">Normal</span>
+            </div>
+
+            <div class="sensor-value-row">
+              <div class="sensor-reading">
+                <span class="value-number" id="phValue">7.20</span>
+                <span class="value-unit">pH</span>
+              </div>
+              <div class="trend-indicator positive" id="phTrend">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+                <span>+0.05 / hr</span>
+              </div>
+            </div>
+
+            <div class="sparkline-container">
+              <canvas id="sparkline-ph" height="42"></canvas>
+            </div>
+
+            <div class="sensor-card-footer">
+              <span class="range-info">Standard Range: <strong>6.5 – 8.5 pH</strong></span>
+            </div>
+          </div>
+
+          <!-- SENSOR 2: TDS -->
+          <div class="sensor-card" id="card-tds">
+            <div class="sensor-card-top">
+              <div class="sensor-icon-wrap tds-theme">
+                <!-- Molecule / particles icon -->
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="2"></circle>
+                  <circle cx="19" cy="8" r="2"></circle>
+                  <circle cx="5" cy="16" r="2"></circle>
+                  <circle cx="18" cy="16" r="2"></circle>
+                  <circle cx="6" cy="8" r="2"></circle>
+                  <path d="M12 10V6M12 14v4M10.5 11l-3.5-2M13.5 13l3.5 2M10.5 13l-3.5 2M13.5 11l3.5-2"></path>
+                </svg>
+              </div>
+              <div class="sensor-meta">
+                <span class="sensor-label">Total Dissolved Solids</span>
+                <h3 class="sensor-name">TDS</h3>
+              </div>
+              <span class="status-badge normal" id="tdsBadge">Normal</span>
+            </div>
+
+            <div class="sensor-value-row">
+              <div class="sensor-reading">
+                <span class="value-number" id="tdsValue">310</span>
+                <span class="value-unit">ppm</span>
+              </div>
+              <div class="trend-indicator negative" id="tdsTrend">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+                <span>-2 ppm</span>
+              </div>
+            </div>
+
+            <div class="sparkline-container">
+              <canvas id="sparkline-tds" height="42"></canvas>
+            </div>
+
+            <div class="sensor-card-footer">
+              <span class="range-info">Drinking Safe: <strong>&lt; 500 ppm</strong></span>
+            </div>
+          </div>
+
+          <!-- SENSOR 3: TURBIDITY -->
+          <div class="sensor-card" id="card-turbidity">
+            <div class="sensor-card-top">
+              <div class="sensor-icon-wrap turb-theme">
+                <!-- Waves / turbidity icon -->
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
+                  <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
+                  <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
+                </svg>
+              </div>
+              <div class="sensor-meta">
+                <span class="sensor-label">Water Clarity</span>
+                <h3 class="sensor-name">Turbidity</h3>
+              </div>
+              <span class="status-badge normal" id="turbBadge">Normal</span>
+            </div>
+
+            <div class="sensor-value-row">
+              <div class="sensor-reading">
+                <span class="value-number" id="turbValue">2.8</span>
+                <span class="value-unit">NTU</span>
+              </div>
+              <div class="trend-indicator neutral" id="turbTrend">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Stable</span>
+              </div>
+            </div>
+
+            <div class="sparkline-container">
+              <canvas id="sparkline-turb" height="42"></canvas>
+            </div>
+
+            <div class="sensor-card-footer">
+              <span class="range-info">Permissible: <strong>&lt; 5.0 NTU</strong></span>
+            </div>
+          </div>
+
+          <!-- SENSOR 4: TEMPERATURE -->
+          <div class="sensor-card" id="card-temp">
+            <div class="sensor-card-top">
+              <div class="sensor-icon-wrap temp-theme">
+                <!-- Thermometer icon -->
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+                </svg>
+              </div>
+              <div class="sensor-meta">
+                <span class="sensor-label">Ambient Water</span>
+                <h3 class="sensor-name">Temperature</h3>
+              </div>
+              <span class="status-badge normal" id="tempBadge">Normal</span>
+            </div>
+
+            <div class="sensor-value-row">
+              <div class="sensor-reading">
+                <span class="value-number" id="tempValue">26.4</span>
+                <span class="value-unit">°C</span>
+              </div>
+              <div class="trend-indicator positive" id="tempTrend">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+                <span>+0.2 °C</span>
+              </div>
+            </div>
+
+            <div class="sparkline-container">
+              <canvas id="sparkline-temp" height="42"></canvas>
+            </div>
+
+            <div class="sensor-card-footer">
+              <span class="range-info">Optimal Range: <strong>20.0 – 30.0 °C</strong></span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ==================== 4. WATER QUALITY STATUS & 8. LOCATION CARD ==================== -->
+        <div class="status-and-location-row">
+          
+          <!-- 4. WATER QUALITY STATUS PANEL -->
+          <div class="water-status-panel normal-state" id="waterStatusPanel">
+            <div class="status-panel-glow"></div>
+            <div class="status-panel-content">
+              <div class="status-badge-header">
+                <span class="panel-eyebrow">DIAGNOSTIC ASSESSMENT</span>
+                <div class="quick-sim-buttons" title="Test different IoT states for your presentation">
+                  <span>Simulate:</span>
+                  <button class="sim-pill sim-norm active" onclick="setPresetCondition('normal')">Normal</button>
+                  <button class="sim-pill sim-warn" onclick="setPresetCondition('warning')">Warning</button>
+                  <button class="sim-pill sim-crit" onclick="setPresetCondition('critical')">Critical</button>
+                </div>
+              </div>
+
+              <div class="status-main-display">
+                <div class="status-icon-ring" id="statusIconRing">
+                  <span class="status-indicator-dot" id="statusPulseDot"></span>
+                  <span class="status-emoji" id="statusEmoji">🟢</span>
+                </div>
+                <div class="status-text-group">
+                  <h3 class="panel-title">Current Water Status</h3>
+                  <div class="status-level-badge" id="statusLevelBadge">NORMAL</div>
+                  <p class="status-description" id="statusDescription">
+                    All monitored parameters are within the configured range.
+                  </p>
+                </div>
+              </div>
+
+              <div class="wqi-score-bar-wrap">
+                <div class="wqi-meta">
+                  <span class="wqi-title">Water Quality Index (WQI)</span>
+                  <span class="wqi-score" id="wqiScore">94 / 100 — Excellent</span>
+                </div>
+                <div class="wqi-track">
+                  <div class="wqi-fill" id="wqiFill" style="width: 94%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 8. MONITORING LOCATION CARD -->
+          <div class="location-card" id="locationCard">
+            <div class="location-card-header">
+              <div class="location-icon-bubble">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+              </div>
+              <div>
+                <span class="card-eyebrow">MONITORING LOCATION</span>
+                <h4 class="location-name" id="locDisplayTitle">Water Tank – Tank 01</h4>
+              </div>
+            </div>
+
+            <div class="location-details-list">
+              <div class="loc-detail-item">
+                <span class="loc-key">Deployment Type</span>
+                <span class="loc-val" id="locDeployType">Storage Reservoir (Indoor)</span>
+              </div>
+              <div class="loc-detail-item">
+                <span class="loc-key">Coordinates</span>
+                <span class="loc-val" id="locCoordinates">28.6139° N, 77.2090° E</span>
+              </div>
+              <div class="loc-detail-item">
+                <span class="loc-key">Telemetry Link</span>
+                <span class="loc-val highlight">ESP32 + Wi-Fi MQTT</span>
+              </div>
+              <div class="loc-detail-item">
+                <span class="loc-key">Sampling Frequency</span>
+                <span class="loc-val">Every 3 Seconds</span>
+              </div>
+            </div>
+
+            <div class="location-switch-btn-wrap">
+              <button class="switch-site-btn" id="switchSiteBtn">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="16 3 21 3 21 8"></polyline>
+                  <line x1="4" y1="20" x2="21" y2="3"></line>
+                  <polyline points="21 16 21 21 16 21"></polyline>
+                  <line x1="15" y1="15" x2="21" y2="21"></line>
+                </svg>
+                <span>Toggle River / Tank Mode</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ==================== 5. LIVE WATER QUALITY GRAPH ==================== -->
+        <div class="chart-section" id="analytics">
+          <div class="chart-header">
+            <div class="chart-title-wrap">
+              <h3 class="chart-title">Water Quality Trends</h3>
+              <p class="chart-subtitle">High-fidelity time-series telemetry visualization</p>
+            </div>
+
+            <!-- Controls: Parameter selector + Time Filters -->
+            <div class="chart-controls">
+              <!-- Parameter Toggle Buttons -->
+              <div class="param-selector" id="paramSelector">
+                <button class="param-btn active" data-param="ph">pH</button>
+                <button class="param-btn" data-param="tds">TDS</button>
+                <button class="param-btn" data-param="turbidity">Turbidity</button>
+                <button class="param-btn" data-param="temperature">Temperature</button>
+              </div>
+
+              <!-- Time Range Selector -->
+              <div class="time-selector" id="timeSelector">
+                <button class="time-btn active" data-time="1H">1H</button>
+                <button class="time-btn" data-time="6H">6H</button>
+                <button class="time-btn" data-time="24H">24H</button>
+                <button class="time-btn" data-time="7D">7D</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Chart Canvas -->
+          <div class="chart-canvas-wrapper">
+            <canvas id="mainTrendsChart"></canvas>
+          </div>
+
+          <!-- Chart Legend & Parameter Stats bar -->
+          <div class="chart-stats-bar">
+            <div class="chart-stat-item">
+              <span class="stat-name">Selected Metric</span>
+              <strong class="stat-val" id="chartStatMetric">pH (Acidity/Alkalinity)</strong>
+            </div>
+            <div class="chart-stat-item">
+              <span class="stat-name">Period Peak</span>
+              <strong class="stat-val" id="chartStatPeak">7.34 pH</strong>
+            </div>
+            <div class="chart-stat-item">
+              <span class="stat-name">Period Low</span>
+              <strong class="stat-val" id="chartStatLow">7.08 pH</strong>
+            </div>
+            <div class="chart-stat-item">
+              <span class="stat-name">Average</span>
+              <strong class="stat-val" id="chartStatAvg">7.21 pH</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== 6. RECENT ALERTS & 7. RECENT READINGS ==================== -->
+        <div class="alerts-and-readings-grid" id="alerts">
+          
+          <!-- 6. ALERTS SECTION -->
+          <div class="alerts-section">
+            <div class="section-card-header">
+              <div class="card-title-group">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#F59E0B" stroke-width="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <h3 class="card-inner-title">Recent Alerts</h3>
+              </div>
+              <button class="clear-alerts-btn" id="clearAlertsBtn">Clear All</button>
+            </div>
+
+            <!-- Alerts List Container -->
+            <div class="alerts-list" id="alertsList">
+              <!-- Dynamically populated or default fallback -->
+              <div class="alert-item warning">
+                <div class="alert-icon-wrap">⚠</div>
+                <div class="alert-info">
+                  <div class="alert-headline">
+                    <span class="alert-name">Turbidity Level High</span>
+                    <span class="alert-time">10:42 AM</span>
+                  </div>
+                  <div class="alert-body">
+                    Current value: <strong class="alert-highlight">18.5 NTU</strong> (Permissible limit: &lt; 5.0 NTU)
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. RECENT READINGS TABLE -->
+          <div class="readings-section" id="monitoring">
+            <div class="section-card-header">
+              <div class="card-title-group">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#00F2FE" stroke-width="2">
+                  <line x1="8" y1="6" x2="21" y2="6"></line>
+                  <line x1="8" y1="12" x2="21" y2="12"></line>
+                  <line x1="8" y1="18" x2="21" y2="18"></line>
+                  <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                  <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                  <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                <h3 class="card-inner-title">Recent Readings</h3>
+              </div>
+              <span class="table-caption">Last 6 Telemetry Packets</span>
+            </div>
+
+            <div class="table-responsive">
+              <table class="readings-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>pH</th>
+                    <th>TDS</th>
+                    <th>Turbidity</th>
+                    <th>Temperature</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="readingsTableBody">
+                  <!-- Populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+
+      <!-- ==================== FOOTER ==================== -->
+      <footer class="app-footer">
+        <div class="footer-left">
+          <span>💧 <strong>WaterGuard</strong> — Smart Water Quality Monitoring System</span>
+          <span class="footer-divider">•</span>
+          <span>B.Tech Capstone Project</span>
+        </div>
+        <div class="footer-right">
+          <span>Architecture: Sensors → ESP32 → Wi-Fi → Firebase Realtime DB → WaterGuard Dashboard</span>
+        </div>
+      </footer>
+
+  <!-- ==================== FIREBASE RULES GUIDE MODAL ==================== -->
+  <div class="modal-backdrop" id="rulesModalBackdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-badge">Firebase Setup</span>
+          <h3 class="modal-title">Realtime Database Security Rules</h3>
+        </div>
+        <button class="modal-close-btn" id="modalCloseBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-lead">
+          To allow your <strong>ESP32 microcontroller</strong> to push sensor telemetry and this <strong>dashboard</strong> to stream it in real time, set your Firebase database rules to public test mode:
+        </p>
+        <ol class="setup-steps">
+          <li>In your Firebase Console, click the <strong>Rules</strong> tab (shown in your screenshot next to Data).</li>
+          <li>Replace the rules editor with the JSON snippet below:</li>
+        </ol>
+        <div class="code-box">
+          <pre><code>{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}</code></pre>
+          <button class="copy-code-btn" id="copyRulesBtn">Copy JSON</button>
+        </div>
+        <ol class="setup-steps" start="3">
+          <li>Click the blue <strong>Publish</strong> button at the top right of the Rules tab.</li>
+          <li>Once published, click the <strong>"🚀 Push Test Data"</strong> button on the dashboard to test instant live synchronization!</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
